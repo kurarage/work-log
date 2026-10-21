@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>作業ログ</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2ef;--surface:#fff;--ink:#18262b;--muted:#5c6b70;--line:#d5dedb;--accent:#0e7c6b;--on-accent:#fff;--gold:#b7791f;--gold-bg:#fbf1dc;--track:#dfe7e4;--danger:#b4372b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12191b;--surface:#1a2427;--ink:#e6eeee;--muted:#93a4a6;--line:#2b393c;--accent:#3fc1a8;--on-accent:#0b1a17;--gold:#e3b341;--gold-bg:#2b2616;--track:#2b393c;--danger:#ef8579;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12191b;--surface:#1a2427;--ink:#e6eeee;--muted:#93a4a6;--line:#2b393c;--accent:#3fc1a8;--on-accent:#0b1a17;--gold:#e3b341;--gold-bg:#2b2616;--track:#2b393c;--danger:#ef8579;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;font-size:16px;line-height:1.6}
+main{max-width:680px;margin:0 auto;padding:16px 16px 64px}
+h1{font-size:22px;margin:8px 0 12px}
+h2{font-size:17px;margin:0}
+.tabs{display:flex;gap:4px;background:var(--track);padding:4px;border-radius:12px;margin-bottom:16px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;padding:8px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink)}
+section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.muted{color:var(--muted);font-size:14px}
+input,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:8px}
+.row>*{min-width:0}
+button.btn{font:inherit;font-weight:700;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);border-radius:8px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+button.ghost{background:transparent;color:var(--accent)}
+button.link{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:4px 6px;text-decoration:underline}
+button.link.del{color:var(--danger)}
+.quest{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line)}
+.quest input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.quest label{flex:1;cursor:pointer}
+.quest.done label{color:var(--muted);text-decoration:line-through}
+.streak{background:var(--gold-bg);color:var(--gold);font-weight:700;font-size:14px;padding:2px 10px;border-radius:99px}
+.task{border-top:1px solid var(--line);padding:14px 0}
+.task:first-of-type{border-top:0}
+.tname{font-weight:700;font-size:17px;word-break:break-word}
+.badge{font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin-left:6px;white-space:nowrap}
+.badge.go{color:var(--accent);border-color:var(--accent)}
+.badge.ok{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.bar{height:10px;background:var(--track);border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.meta{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;align-items:center}
+.form{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{font-size:13px;color:var(--muted);display:block}
+.form .full{grid-column:1/-1}
+.log{padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.log:last-child{border-bottom:0}
+.log b{font-weight:700}
+.empty{color:var(--muted);padding:8px 0}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font:inherit;font-size:14px;margin:0 0 8px}
+.tabs button{font-size:14px;padding:8px 2px}
+select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 6px}
+.actions select{margin-left:auto;font-size:14px;padding:4px 6px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.ov[hidden]{display:none}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:360px;width:100%}
+.box .row{justify-content:flex-end}
+button.danger{background:#b4372b;border-color:#b4372b;color:#fff}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dow{text-align:center;font-size:12px;color:var(--muted)}
+.cal button{aspect-ratio:1/1.1;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--accent) calc(var(--lv,0)*1%),var(--surface));color:var(--ink);font:inherit;font-size:13px;padding:2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.3}
+.cal button small{font-size:10px}
+.cal button.today{border:2px solid var(--gold)}
+.cal button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin:8px 0;font-size:14px}
+.mrow .bar{grid-column:1/-1;margin:0;height:6px}
+</style>
+</head>
+<body>
+<main>
+<h1>作業ログ</h1>
+<div class="tabs" role="tablist">
+  <button role="tab" id="tab-today" aria-selected="true">今日</button>
+  <button role="tab" id="tab-tasks" aria-selected="false">タスク</button>
+  <button role="tab" id="tab-done" aria-selected="false">完了</button>
+  <button role="tab" id="tab-cal" aria-selected="false">カレンダー</button>
+</div>
+<div id="view"></div>
+<div id="dlg" class="ov" role="alertdialog" aria-modal="true" aria-labelledby="dmsg" hidden><div class="box"><p id="dmsg" style="margin:0 0 16px"></p><div class="row"><button class="btn ghost" id="dno" type="button">キャンセル</button><button class="btn danger" id="dok" type="button">削除する</button></div></div></div>
+</main>
+<script>
+const KEY='worklog.v1';
+let S={tasks:[],quests:[],qdone:{}};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dur=m=>m>=60?(Math.floor(m/60)+'時間'+(m%60?m%60+'分':'')):m+'分';
+const endTime=(s,m)=>{if(!s)return'';const [h,n]=s.split(':').map(Number);const t=h*60+n+m;return pad(Math.floor(t/60)%24)+':'+pad(t%60)};
+let tab='today',viewDate=ymd(new Date()),open={},hist={};
+
+const logsOf=t=>t.logs.slice().sort((a,b)=>(a.date+(a.start||'')+a.id).localeCompare(b.date+(b.start||'')+b.id));
+const prog=t=>{const l=logsOf(t);return l.length?l[l.length-1].prog:0};
+const total=t=>t.logs.reduce((s,l)=>s+l.min,0);
+const status=t=>!t.logs.length?['未着手','']:prog(t)>=100?['完了','ok']:['進行中','go'];
+const allDone=d=>S.quests.length>0&&S.quests.every(q=>(S.qdone[d]||[]).includes(q.id));
+function streak(){let d=new Date(),n=0;if(!allDone(ymd(d)))d.setDate(d.getDate()-1);
+  while(allDone(ymd(d))&&n<999){n++;d.setDate(d.getDate()-1)}return n}
+
+function questsHTML(){
+  const done=S.qdone[viewDate]||[];
+  const c=S.quests.filter(q=>done.includes(q.id)).length;
+  const st=streak();
+  return `<section><div class="head"><h2>デイリークエスト ${c}/${S.quests.length}</h2>${st?`<span class="streak">${st}日連続達成</span>`:''}</div>
+  ${S.quests.length?S.quests.map(q=>{const k=done.includes(q.id);return `<div class="quest ${k?'done':''}"><input type="checkbox" id="q${q.id}" data-act="qtoggle" data-id="${q.id}" ${k?'checked':''}><label for="q${q.id}">${esc(q.name)}</label><button class="link del" data-act="qdel" data-id="${q.id}">削除</button></div>`}).join(''):'<div class="empty">毎日やることを登録すると、ここにチェックリストが出ます。</div>'}
+  <form data-form="quest" class="row" style="margin-top:12px"><input name="name" placeholder="例：英単語を10個覚える" maxlength="60" required><button class="btn" type="submit">追加</button></form></section>`;
+}
+
+function todayLogs(){
+  const out=[];S.tasks.forEach(t=>logsOf(t).forEach((l,i,a)=>out.push({t,l,prev:i?a[i-1].prog:0})));
+  return out.filter(x=>x.l.date===viewDate).sort((a,b)=>(a.l.start||'').localeCompare(b.l.start||''));
+}
+function logLine(x){const l=x.l,e=endTime(l.start,l.min),d=l.prog-x.prev;
+  return {time:l.start?(l.start+'〜'+e):'',head:x.t.name,min:l.min,prog:l.prog,d:(d>=0?'+':'')+d,note:l.note}}
+
+function todayHTML(){
+  const ls=todayLogs().map(x=>({x,r:logLine(x)}));
+  const sum=ls.reduce((s,o)=>s+o.x.l.min,0);
+  const done=(S.qdone[viewDate]||[]).filter(id=>S.quests.some(q=>q.id===id)).length;
+  let txt=viewDate+' やったこと\n'+ls.map(({r})=>`・${r.time?r.time+' ':''}${r.head}（${r.min}分／進捗${r.prog}%、${r.d}）${r.note?' '+r.note:''}`).join('\n');
+  txt+=`\n合計 ${dur(sum)}`+(S.quests.length?`\nデイリークエスト ${done}/${S.quests.length}`:'');
+  return `<section style="padding:12px 16px"><div class="row" style="align-items:center"><span class="muted" style="white-space:nowrap">日付</span><input type="date" id="vd" value="${viewDate}"></div></section>
+  ${questsHTML()}
+  <section><div class="head"><h2>この日の作業</h2><span class="muted">合計 ${dur(sum)}</span></div>
+  ${ls.length?ls.map(({r})=>`<div class="log"><b>${r.time?r.time+'　':''}${esc(r.head)}</b>　${r.min}分<br><span class="muted">進捗 ${r.prog}%（${r.d}）</span>${r.note?`<br>${esc(r.note)}`:''}</div>`).join(''):'<div class="empty">この日の記録はまだありません。「タスク」から記録を追加できます。</div>'}</section>
+  ${ls.length||S.quests.length?`<section><div class="head"><h2>今日のまとめ</h2></div><pre id="sum">${esc(txt)}</pre><button class="btn ghost" data-act="copy">コピー</button> <span class="muted" id="cmsg"></span></section>`:''}`;
+}
+
+function taskHTML(t){
+  const p=prog(t),[sl,sc]=status(t),isOpen=open[t.id],isHist=hist[t.id],now=new Date();
+  const ls=logsOf(t);
+  return `<div class="task"><div><span class="tname">${esc(t.name)}</span><span class="badge ${sc}">${sl}</span></div>
+  <div class="bar" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100"><i style="width:${p}%"></i></div>
+  <div class="meta"><span>進捗 ${p}%</span><span>合計 ${dur(total(t))}（${t.logs.length}回）</span></div>
+  <div class="actions"><button class="btn ghost" data-act="topen" data-id="${t.id}">${isOpen?'閉じる':'記録を追加'}</button>
+  <button class="link" data-act="thist" data-id="${t.id}">${isHist?'履歴を隠す':'履歴'}</button>
+  <button class="link del" data-act="tdel" data-id="${t.id}">タスクを削除</button>
+  <select data-act="timp" data-id="${t.id}" aria-label="重要度">${IMP.map(([k,l])=>`<option value="${k}" ${(t.imp||'mid')===k?'selected':''}>${l}</option>`).join('')}</select></div>
+  ${isOpen?`<form class="form" data-form="log" data-id="${t.id}">
+    <div><label>日付</label><input type="date" name="date" value="${ymd(now)}" required></div>
+    <div><label>開始時刻</label><input type="time" name="start" value="${hm(now)}"></div>
+    <div><label>取り組んだ時間（分）</label><input type="number" name="min" min="1" max="1440" inputmode="numeric" placeholder="30" required></div>
+    <div><label>ここまでの進捗（%）</label><input type="number" name="prog" min="0" max="100" inputmode="numeric" value="${p}" required></div>
+    <div class="full"><label>やったこと</label><textarea name="note" rows="2" placeholder="例：第3章の練習問題を解いた"></textarea></div>
+    <div class="full"><button class="btn" type="submit">記録を保存</button></div></form>`:''}
+  ${isHist?`<div style="margin-top:10px">${ls.length?ls.slice().reverse().map(l=>`<div class="log"><b>${l.date} ${l.start?l.start+'〜'+endTime(l.start,l.min):''}</b>　${l.min}分　進捗${l.prog}%${l.note?`<br>${esc(l.note)}`:''}<br><button class="link del" data-act="ldel" data-id="${t.id}" data-lid="${l.id}">この記録を削除</button></div>`).join(''):'<div class="empty">まだ記録がありません。</div>'}</div>`:''}</div>`;
+}
+const IMP=[['high','重要度：高'],['mid','重要度：中'],['low','重要度：低']];
+function tasksHTML(){
+  const act=S.tasks.filter(t=>prog(t)<100);
+  return `<section><form data-form="task" class="row"><input name="name" placeholder="新しいタスク（例：レポートを書く）" maxlength="80" required><select name="imp" aria-label="重要度">${IMP.map(([k,l])=>`<option value="${k}" ${k==='mid'?'selected':''}>${l}</option>`).join('')}</select><button class="btn" type="submit">追加</button></form></section>`+
+  IMP.map(([k,l])=>{const g=act.filter(t=>(t.imp||'mid')===k);return `<section><div class="head"><h2>${l}</h2><span class="muted">${g.length}件</span></div>${g.length?g.map(taskHTML).join(''):'<div class="empty">タスクはありません。</div>'}</section>`}).join('');
+}
+function doneHTML(){
+  const d=S.tasks.filter(t=>prog(t)>=100);
+  return `<section><div class="head"><h2>完了したタスク</h2><span class="muted">${d.length}件</span></div>${d.length?d.map(taskHTML).join(''):'<div class="empty">進捗が100%になったタスクがここに移ります。</div>'}</section>`;
+}
+let cal=(()=>{const n=new Date();return [n.getFullYear(),n.getMonth()]})(),sel=ymd(new Date());
+const sm=m=>m<60?m+'分':(Math.round(m/6)/10)+'h';
+const shift=d=>{const x=new Date(cal[0],cal[1]+d,1);return [x.getFullYear(),x.getMonth()]};
+function calHTML(){
+  const [y,m]=cal,days=new Date(y,m+1,0).getDate(),lead=new Date(y,m,1).getDay(),per={};
+  S.tasks.forEach(t=>t.logs.forEach(l=>{(per[l.date]=per[l.date]||[]).push({t,l})}));
+  const mins=d=>(per[d]||[]).reduce((s,o)=>s+o.l.min,0);
+  const pre=y+'-'+pad(m+1)+'-',td=ymd(new Date());
+  let mx=1,mt=0,cells='';
+  for(let i=1;i<=days;i++){const v=mins(pre+pad(i));mx=Math.max(mx,v);mt+=v}
+  for(let i=0;i<lead;i++)cells+='<span></span>';
+  for(let i=1;i<=days;i++){const d=pre+pad(i),v=mins(d);cells+=`<button data-act="cday" data-d="${d}" aria-pressed="${d===sel}" class="${d===td?'today':''}" style="--lv:${v?Math.round(10+v/mx*35):0}">${i}${v?`<small>${sm(v)}</small>`:''}</button>`}
+  const bt={};Object.keys(per).filter(d=>d.startsWith(pre)).forEach(d=>per[d].forEach(o=>{bt[o.t.id]=(bt[o.t.id]||0)+o.l.min}));
+  const rows=S.tasks.filter(t=>bt[t.id]).sort((a,b)=>bt[b.id]-bt[a.id]),rmx=rows.length?bt[rows[0].id]:1;
+  const sd=(per[sel]||[]).slice().sort((a,b)=>(a.l.start||'').localeCompare(b.l.start||''));
+  const qd=(S.qdone[sel]||[]).filter(id=>S.quests.some(q=>q.id===id)).length;
+  return `<section><div class="head"><button class="btn ghost" data-act="cprev" aria-label="前の月">＜</button><h2>${y}年${m+1}月</h2><button class="btn ghost" data-act="cnext" aria-label="次の月">＞</button></div>
+  <div class="cal">${['日','月','火','水','木','金','土'].map(w=>`<div class="dow">${w}</div>`).join('')}${cells}</div></section>
+  <section><div class="head"><h2>${sel} の作業</h2><span class="muted">合計 ${dur(mins(sel))}</span></div>
+  ${sd.length?sd.map(o=>`<div class="log"><b>${o.l.start?o.l.start+'〜'+endTime(o.l.start,o.l.min)+'　':''}${esc(o.t.name)}</b>${prog(o.t)>=100?'<span class="badge ok">完了</span>':''}　${o.l.min}分<br><span class="muted">進捗 ${o.l.prog}%</span>${o.l.note?`<br>${esc(o.l.note)}`:''}</div>`).join(''):'<div class="empty">この日の記録はありません。</div>'}
+  ${S.quests.length?`<div class="muted" style="margin-top:8px">デイリークエスト ${qd}/${S.quests.length}</div>`:''}</section>
+  <section><div class="head"><h2>${m+1}月の作業別時間</h2><span class="muted">合計 ${dur(mt)}</span></div>
+  ${rows.length?rows.map(t=>`<div class="mrow"><span>${esc(t.name)}${prog(t)>=100?'<span class="badge ok">完了</span>':''}</span><span>${dur(bt[t.id])}</span><div class="bar"><i style="width:${Math.round(bt[t.id]/rmx*100)}%"></i></div></div>`).join(''):'<div class="empty">この月の記録はありません。</div>'}</section>`;
+}
+
+const TABS={today:todayHTML,tasks:tasksHTML,done:doneHTML,cal:calHTML};
+function render(){
+  Object.keys(TABS).forEach(k=>$('#tab-'+k).setAttribute('aria-selected',tab===k));
+  $('#view').innerHTML=TABS[tab]();
+}
+function $(s){return document.querySelector(s)}
+
+['today','tasks','done','cal'].forEach(k=>{$('#tab-'+k).onclick=()=>{tab=k;render()}});
+document.addEventListener('change',e=>{
+  if(e.target.id==='vd'&&e.target.value){viewDate=e.target.value;render()}
+  if(e.target.dataset.act==='timp'){const t=S.tasks.find(x=>x.id===e.target.dataset.id);t.imp=e.target.value;save();render();return}
+  if(e.target.dataset.act==='qtoggle'){const a=S.qdone[viewDate]||(S.qdone[viewDate]=[]),id=e.target.dataset.id,i=a.indexOf(id);
+    i<0?a.push(id):a.splice(i,1);save();render()}
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.type==='checkbox')return;
+  const a=b.dataset.act,id=b.dataset.id,t=S.tasks.find(x=>x.id===id);
+  if(b.tagName==='SELECT')return;
+  if(a==='cday'){sel=b.dataset.d}
+  else if(a==='cprev'){cal=shift(-1)}
+  else if(a==='cnext'){cal=shift(1)}
+  else if(a==='topen'){open[id]=!open[id]}
+  else if(a==='thist'){hist[id]=!hist[id]}
+  else if(a==='tdel'){ask('「'+t.name+'」と、その作業記録をすべて削除します。カレンダーの記録も消えます。よろしいですか？',()=>{S.tasks=S.tasks.filter(x=>x.id!==id);save();render()});return}
+  else if(a==='ldel'){ask('この作業記録を削除しますか？',()=>{t.logs=t.logs.filter(l=>l.id!==b.dataset.lid);save();render()});return}
+  else if(a==='qdel'){ask('このデイリークエストを削除しますか？',()=>{S.quests=S.quests.filter(q=>q.id!==id);save();render()});return}
+  else if(a==='copy'){const s=$('#sum').textContent;
+    (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>{$('#cmsg').textContent='コピーしました'}).catch(()=>{const r=document.createRange();r.selectNodeContents($('#sum'));const g=getSelection();g.removeAllRanges();g.addRange(r);$('#cmsg').textContent='選択しました。手動でコピーしてください'});return}
+  render();
+});
+document.addEventListener('submit',e=>{
+  const f=e.target,k=f.dataset.form;if(!k)return;e.preventDefault();
+  const d=Object.fromEntries(new FormData(f));
+  if(k==='task'){S.tasks.unshift({id:uid(),name:d.name.trim(),imp:d.imp||'mid',logs:[]})}
+  else if(k==='quest'){S.quests.push({id:uid(),name:d.name.trim()})}
+  else if(k==='log'){const t=S.tasks.find(x=>x.id===f.dataset.id);
+    t.logs.push({id:uid(),date:d.date,start:d.start,min:Math.max(1,parseInt(d.min)||1),prog:Math.min(100,Math.max(0,parseInt(d.prog)||0)),note:(d.note||'').trim()});
+    open[t.id]=false;hist[t.id]=true}
+  save();render();
+});
+let cfn=null;
+function ask(msg,fn){cfn=fn;$('#dmsg').textContent=msg;$('#dlg').hidden=false;$('#dno').focus()}
+const closeDlg=()=>{$('#dlg').hidden=true;cfn=null};
+$('#dno').onclick=closeDlg;
+$('#dok').onclick=()=>{const f=cfn;closeDlg();if(f)f()};
+$('#dlg').addEventListener('click',e=>{if(e.target.id==='dlg')closeDlg()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#dlg').hidden)closeDlg()});
+render();
+</script>
+</body>
+</html>
