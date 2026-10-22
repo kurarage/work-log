@@ -53,7 +53,8 @@ button.link.del{color:var(--danger)}
 .log b{font-weight:700}
 .empty{color:var(--muted);padding:8px 0}
 pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font:inherit;font-size:14px;margin:0 0 8px}
-.tabs button{font-size:14px;padding:8px 2px}
+.tabs button{font-size:13px;padding:8px 2px}
+.pt{font-size:64px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
 select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 6px}
 .actions select{margin-left:auto;font-size:14px;padding:4px 6px}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
@@ -79,6 +80,7 @@ button.danger{background:#b4372b;border-color:#b4372b;color:#fff}
   <button role="tab" id="tab-tasks" aria-selected="false">タスク</button>
   <button role="tab" id="tab-done" aria-selected="false">完了</button>
   <button role="tab" id="tab-cal" aria-selected="false">カレンダー</button>
+  <button role="tab" id="tab-pomo" aria-selected="false">タイマー</button>
 </div>
 <div id="view"></div>
 <div id="dlg" class="ov" role="alertdialog" aria-modal="true" aria-labelledby="dmsg" hidden><div class="box"><p id="dmsg" style="margin:0 0 16px"></p><div class="row"><button class="btn ghost" id="dno" type="button">キャンセル</button><button class="btn danger" id="dok" type="button">削除する</button></div></div></div>
@@ -131,7 +133,8 @@ function todayHTML(){
   ${questsHTML()}
   <section><div class="head"><h2>この日の作業</h2><span class="muted">合計 ${dur(sum)}</span></div>
   ${ls.length?ls.map(({r})=>`<div class="log"><b>${r.time?r.time+'　':''}${esc(r.head)}</b>　${r.min}分<br><span class="muted">進捗 ${r.prog}%（${r.d}）</span>${r.note?`<br>${esc(r.note)}`:''}</div>`).join(''):'<div class="empty">この日の記録はまだありません。「タスク」から記録を追加できます。</div>'}</section>
-  ${ls.length||S.quests.length?`<section><div class="head"><h2>今日のまとめ</h2></div><pre id="sum">${esc(txt)}</pre><button class="btn ghost" data-act="copy">コピー</button> <span class="muted" id="cmsg"></span></section>`:''}`;
+  ${ls.length||S.quests.length?`<section><div class="head"><h2>今日のまとめ</h2></div><pre id="sum">${esc(txt)}</pre><button class="btn ghost" data-act="copy">コピー</button> <span class="muted" id="cmsg"></span></section>`:''}
+  <section><div class="head"><h2>データの引き継ぎ</h2></div><p class="muted" style="margin:0 0 8px">書き出したテキストを別の端末の同じ場所に貼り付けると、記録を移せます。</p><textarea id="dtx" rows="3" placeholder="ここに書き出し／貼り付け"></textarea><div class="actions"><button class="btn ghost" data-act="dexp">書き出す</button><button class="btn ghost" data-act="dimp">読み込む（上書き）</button></div><div class="muted" id="dm2"></div></section>`;
 }
 
 function taskHTML(t){
@@ -188,15 +191,16 @@ function calHTML(){
   ${rows.length?rows.map(t=>`<div class="mrow"><span>${esc(t.name)}${prog(t)>=100?'<span class="badge ok">完了</span>':''}</span><span>${dur(bt[t.id])}</span><div class="bar"><i style="width:${Math.round(bt[t.id]/rmx*100)}%"></i></div></div>`).join(''):'<div class="empty">この月の記録はありません。</div>'}</section>`;
 }
 
-const TABS={today:todayHTML,tasks:tasksHTML,done:doneHTML,cal:calHTML};
+const TABS={today:todayHTML,tasks:tasksHTML,done:doneHTML,cal:calHTML,pomo:pomoHTML};
 function render(){
   Object.keys(TABS).forEach(k=>$('#tab-'+k).setAttribute('aria-selected',tab===k));
   $('#view').innerHTML=TABS[tab]();
 }
 function $(s){return document.querySelector(s)}
 
-['today','tasks','done','cal'].forEach(k=>{$('#tab-'+k).onclick=()=>{tab=k;render()}});
+['today','tasks','done','cal','pomo'].forEach(k=>{$('#tab-'+k).onclick=()=>{tab=k;render()}});
 document.addEventListener('change',e=>{
+  if(e.target.dataset.pset){const k=e.target.dataset.pset,v=Math.min(180,Math.max(1,parseInt(e.target.value)||1));P[k]=v;pSave();if(!P.running)P.left=(P.mode==='work'?P.work:P.brk)*60;render();return}
   if(e.target.id==='vd'&&e.target.value){viewDate=e.target.value;render()}
   if(e.target.dataset.act==='timp'){const t=S.tasks.find(x=>x.id===e.target.dataset.id);t.imp=e.target.value;save();render();return}
   if(e.target.dataset.act==='qtoggle'){const a=S.qdone[viewDate]||(S.qdone[viewDate]=[]),id=e.target.dataset.id,i=a.indexOf(id);
@@ -206,7 +210,11 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.type==='checkbox')return;
   const a=b.dataset.act,id=b.dataset.id,t=S.tasks.find(x=>x.id===id);
   if(b.tagName==='SELECT')return;
-  if(a==='cday'){sel=b.dataset.d}
+  if(a==='pgo'){pToggle()}
+  else if(a==='prst'){pReset()}
+  else if(a==='pskip'){pSwitch()}
+  else if(a==='ppre'){P.work=+b.dataset.w;P.brk=+b.dataset.b;pSave();if(!P.running)P.left=(P.mode==='work'?P.work:P.brk)*60}
+  else if(a==='cday'){sel=b.dataset.d}
   else if(a==='cprev'){cal=shift(-1)}
   else if(a==='cnext'){cal=shift(1)}
   else if(a==='topen'){open[id]=!open[id]}
@@ -214,6 +222,10 @@ document.addEventListener('click',e=>{
   else if(a==='tdel'){ask('「'+t.name+'」と、その作業記録をすべて削除します。カレンダーの記録も消えます。よろしいですか？',()=>{S.tasks=S.tasks.filter(x=>x.id!==id);save();render()});return}
   else if(a==='ldel'){ask('この作業記録を削除しますか？',()=>{t.logs=t.logs.filter(l=>l.id!==b.dataset.lid);save();render()});return}
   else if(a==='qdel'){ask('このデイリークエストを削除しますか？',()=>{S.quests=S.quests.filter(q=>q.id!==id);save();render()});return}
+  else if(a==='dexp'){const s=JSON.stringify(S);$('#dtx').value=s;$('#dtx').select();(navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>{$('#dm2').textContent='書き出してコピーしました'}).catch(()=>{$('#dm2').textContent='書き出しました。テキストを全選択してコピーしてください'});return}
+  else if(a==='dimp'){let o;try{o=JSON.parse($('#dtx').value)}catch(e){}
+    if(!o||!Array.isArray(o.tasks)){$('#dm2').textContent='読み込めませんでした。書き出したテキストをそのまま貼り付けてください';return}
+    ask('今の記録をすべて、貼り付けたデータで置き換えます。よろしいですか？',()=>{S=Object.assign({tasks:[],quests:[],qdone:{}},o);save();render()},'置き換える');return}
   else if(a==='copy'){const s=$('#sum').textContent;
     (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>{$('#cmsg').textContent='コピーしました'}).catch(()=>{const r=document.createRange();r.selectNodeContents($('#sum'));const g=getSelection();g.removeAllRanges();g.addRange(r);$('#cmsg').textContent='選択しました。手動でコピーしてください'});return}
   render();
@@ -228,8 +240,29 @@ document.addEventListener('submit',e=>{
     open[t.id]=false;hist[t.id]=true}
   save();render();
 });
+const PK='worklog.pomo';
+let P={mode:'work',work:25,brk:5,left:1500,running:false,endAt:0,cycles:0},pint=null;
+try{const r=JSON.parse(localStorage.getItem(PK));if(r){P.work=r.work||25;P.brk=r.brk||5;P.left=P.work*60}}catch(e){}
+const pSave=()=>{try{localStorage.setItem(PK,JSON.stringify({work:P.work,brk:P.brk}))}catch(e){}};
+const fmtT=s=>pad(Math.floor(s/60))+':'+pad(s%60);
+const pTotal=()=>(P.mode==='work'?P.work:P.brk)*60;
+function pPaint(){const t=$('#pt');if(t)t.textContent=fmtT(P.left);const b=$('#pb');if(b)b.style.width=Math.round((1-P.left/pTotal())*100)+'%';try{document.title=P.running?fmtT(P.left)+(P.mode==='work'?' 作業':' 休憩'):'作業ログ'}catch(e){}}
+function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();[0,.25,.5].forEach(d=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.15;o.start(c.currentTime+d);o.stop(c.currentTime+d+.15)})}catch(e){}try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}
+function pSwitch(){clearInterval(pint);P.running=false;P.mode=P.mode==='work'?'break':'work';P.left=pTotal();if(tab==='pomo')render();pPaint()}
+function pTick(){if(!P.running)return;P.left=Math.max(0,Math.ceil((P.endAt-Date.now())/1000));pPaint();if(P.left<=0){beep();if(P.mode==='work')P.cycles++;pSwitch()}}
+function pToggle(){if(P.running){P.left=Math.max(0,Math.ceil((P.endAt-Date.now())/1000));P.running=false;clearInterval(pint)}else{if(P.left<=0)P.left=pTotal();P.endAt=Date.now()+P.left*1000;P.running=true;clearInterval(pint);pint=setInterval(pTick,250)}pPaint()}
+function pReset(){clearInterval(pint);P.running=false;P.left=pTotal();pPaint()}
+function pomoHTML(){
+  return `<section style="text-align:center"><div class="muted">${P.mode==='work'?'作業':'休憩'}</div><div class="pt" id="pt">${fmtT(P.left)}</div>
+  <div class="bar"><i id="pb" style="width:${Math.round((1-P.left/pTotal())*100)}%"></i></div>
+  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn" data-act="pgo">${P.running?'一時停止':'スタート'}</button><button class="btn ghost" data-act="prst">リセット</button><button class="btn ghost" data-act="pskip">${P.mode==='work'?'休憩へ':'作業へ'}</button></div>
+  <div class="muted" style="margin-top:10px">終わったポモドーロ：${P.cycles}回（ページを開き直すと0に戻ります）</div></section>
+  <section><div class="head"><h2>時間の設定</h2></div><div class="form"><div><label>作業（分）</label><input type="number" min="1" max="180" inputmode="numeric" data-pset="work" value="${P.work}"></div><div><label>休憩（分）</label><input type="number" min="1" max="180" inputmode="numeric" data-pset="brk" value="${P.brk}"></div>
+  <div class="full actions" style="margin:0"><button class="btn ghost" data-act="ppre" data-w="25" data-b="5">25/5</button><button class="btn ghost" data-act="ppre" data-w="50" data-b="10">50/10</button><button class="btn ghost" data-act="ppre" data-w="90" data-b="15">90/15</button></div></div>
+  <p class="muted" style="margin:10px 0 0">このタイマーは作業記録には入りません。時間を変えた場合、動いている間は次の回から反映されます。終わると音が鳴り、次の回に切り替わって待機します。</p></section>`;
+}
 let cfn=null;
-function ask(msg,fn){cfn=fn;$('#dmsg').textContent=msg;$('#dlg').hidden=false;$('#dno').focus()}
+function ask(msg,fn,lb){cfn=fn;$('#dok').textContent=lb||'削除する';$('#dmsg').textContent=msg;$('#dlg').hidden=false;$('#dno').focus()}
 const closeDlg=()=>{$('#dlg').hidden=true;cfn=null};
 $('#dno').onclick=closeDlg;
 $('#dok').onclick=()=>{const f=cfn;closeDlg();if(f)f()};
